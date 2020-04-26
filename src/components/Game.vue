@@ -3,10 +3,6 @@
     <canvas
       v-bind:width="sandGame.width"
       v-bind:height="sandGame.height"
-      v-on:mousedown="onMouseDown"
-      v-on:mouseup="stopDrawing"
-      v-on:mouseout="stopDrawing"
-      v-on:mousemove="draw"
       ref="canvas"
       style="border: 1px solid black;"
     ></canvas>
@@ -59,6 +55,28 @@ export default class Game extends Vue {
       view: this.canvas,
     });
 
+    this.sprite.interactive = true;
+
+    this.sprite.on("pointermove", () => {
+      const mouse = this.pixiApp.renderer.plugins.interaction.mouse.global;
+      this.mouseX = Math.floor(mouse.x);
+      this.mouseY = Math.floor(mouse.y);
+    });
+
+    this.sprite.on("pointerdown", () => {
+      this.drawing = true;
+    });
+
+    this.sprite.on("pointerup", () => {
+      this.drawing = false;
+    });
+
+    this.pixiApp.ticker.add((delta: number) => {
+      if (this.drawing) {
+        this.sandGame.createParticle(this.mouseX, this.mouseY);
+      }
+    });
+
     this.pixiApp.stage.addChild(this.sprite);
 
     this.interval = setInterval(() => {
@@ -71,25 +89,6 @@ export default class Game extends Vue {
     this.texture.destroy();
     this.sprite.destroy();
     this.pixiApp.destroy();
-  }
-
-  onMouseDown(event: MouseEvent): void {
-    this.drawing = true;
-  }
-
-  stopDrawing(event: MouseEvent): void {
-    this.drawing = false;
-  }
-
-  draw(event: MouseEvent): void {
-    if (!this.drawing) {
-      return;
-    }
-
-    this.mouseX = event.offsetX;
-    this.mouseY = event.offsetY;
-
-    this.sandGame.createParticle(this.mouseX, this.mouseY);
   }
 
   drawGame(): void {
