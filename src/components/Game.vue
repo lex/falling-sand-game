@@ -72,8 +72,6 @@ export default class Game extends Vue {
   }
 
   drawGame(): void {
-    this.clearCanvas();
-
     const imageData = this.context?.getImageData(
       0,
       0,
@@ -108,6 +106,7 @@ export default class Game extends Vue {
   }
 
   renderLoop(): void {
+    this.clearCanvas();
     this.drawGame();
   }
 }
