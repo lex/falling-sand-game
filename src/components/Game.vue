@@ -31,7 +31,7 @@ export default class Game extends Vue {
   private drawing = false;
 
   interval = 0;
-  tickRate = 33; // milliseconds
+  tickRate = 16; // milliseconds
 
   private pixiApp!: PIXI.Application;
 
@@ -68,6 +68,9 @@ export default class Game extends Vue {
 
   destroyed(): void {
     clearInterval(this.interval);
+    this.texture.destroy();
+    this.sprite.destroy();
+    this.pixiApp.destroy();
   }
 
   onMouseDown(event: MouseEvent): void {
