@@ -15,30 +15,51 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
+import * as PIXI from "pixi.js";
 import FallingSandGame from "@/classes/FallingSandGame";
 import Particle from "@/classes/Particle";
 
 @Component
 export default class Game extends Vue {
-  sandGame: FallingSandGame = new FallingSandGame();
+  private sandGame: FallingSandGame = new FallingSandGame();
 
-  context?: CanvasRenderingContext2D = undefined;
-  canvas?: HTMLCanvasElement = undefined;
+  private canvas!: HTMLCanvasElement;
 
-  mouseX = 0;
-  mouseY = 0;
+  private mouseX = 0;
+  private mouseY = 0;
 
-  drawing = false;
+  private drawing = false;
 
   interval = 0;
-  tickRate = 16; // milliseconds
+  tickRate = 33; // milliseconds
+
+  private pixiApp!: PIXI.Application;
+
+  private frameBuffer = new Uint8Array(this.sandGame.height * this.sandGame.width * 3).fill(0);
+
+  private texture = PIXI.Texture.fromBuffer(
+      this.frameBuffer,
+      this.sandGame.width,
+      this.sandGame.height,
+      {
+        format: PIXI.FORMATS.RGB,
+        type: PIXI.TYPES.UNSIGNED_BYTE
+      }
+  );
+
+  private sprite: PIXI.Sprite = PIXI.Sprite.from(this.texture);
 
   mounted(): void {
     const canvas = this.$refs.canvas as HTMLCanvasElement;
-    const context = canvas.getContext("2d");
-    context!.fillStyle = "black";
     this.canvas = canvas;
-    this.context = context!;
+
+    this.pixiApp = new PIXI.Application({
+      width: this.sandGame.width,
+      height: this.sandGame.height,
+      view: this.canvas,
+    });
+
+    this.pixiApp.stage.addChild(this.sprite);
 
     this.interval = setInterval(() => {
       this.gameLoop();
@@ -68,36 +89,20 @@ export default class Game extends Vue {
     this.sandGame.createParticle(this.mouseX, this.mouseY);
   }
 
-  clearCanvas(): void {
-    this.context?.clearRect(0, 0, this.canvas!.width, this.canvas!.height);
-  }
-
   drawGame(): void {
-    const imageData = this.context?.getImageData(
-      0,
-      0,
-      this.sandGame.width,
-      this.sandGame.height
-    );
-
     for (let y = 0; y < this.sandGame.height; ++y) {
       for (let x = 0; x < this.sandGame.width; ++x) {
-        const particle: Particle = this.sandGame.grid[y][x];
+        const value = this.sandGame.grid[y][x] == 0 ? 0 : 255;
 
-        if (particle.empty) {
-          continue;
-        }
+        const position = y * (this.sandGame.width * 3) + x * 3;
 
-        // https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Pixel_manipulation_with_canvas
-        const position = y * (imageData!.width * 4) + x * 4;
-        imageData!.data[position] = 0;
-        imageData!.data[position + 1] = 0;
-        imageData!.data[position + 2] = 0;
-        imageData!.data[position + 3] = 255;
+        this.frameBuffer[position] = value;
+        this.frameBuffer[position + 1] = value;
+        this.frameBuffer[position + 2] = value;
       }
     }
 
-    this.context!.putImageData(imageData!, 0, 0);
+    this.texture.update();
   }
 
   gameLoop(): void {
@@ -107,7 +112,6 @@ export default class Game extends Vue {
   }
 
   renderLoop(): void {
-    this.clearCanvas();
     this.drawGame();
   }
 }
