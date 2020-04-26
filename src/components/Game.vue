@@ -40,11 +40,13 @@ export default class Game extends Vue {
     this.canvas = canvas;
     this.context = context!;
 
-    this.clearCanvas();
-
     this.interval = setInterval(() => {
       this.gameLoop();
     }, this.tickRate);
+  }
+
+  destroyed(): void {
+    clearInterval(this.interval);
   }
 
   onMouseDown(event: MouseEvent): void {
@@ -63,7 +65,6 @@ export default class Game extends Vue {
     this.mouseX = event.offsetX;
     this.mouseY = event.offsetY;
 
-    const thickness = 6;
     this.sandGame.createParticle(this.mouseX, this.mouseY);
   }
 
