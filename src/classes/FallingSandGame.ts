@@ -1,8 +1,9 @@
 import Particle from "./Particle";
 
 export default class FallingSandGame {
-  width = 640;
-  height = 480;
+  width = 420;
+  height = 420;
+  framebuffer = new Uint8Array(this.height * this.width * 3).fill(0);
   grid = this.createGrid();
 
   createGrid() {
@@ -11,10 +12,20 @@ export default class FallingSandGame {
     );
   }
 
+  private updateFramebuffer(x: number, y: number, value: number): void {
+    const position = y * (this.width * 3) + x * 3;
+
+    this.framebuffer[position] = value;
+    this.framebuffer[position + 1] = value;
+    this.framebuffer[position + 2] = value;
+  }
+
   tick(): void {
     for (let y = this.height - 1; y >= 0; --y) {
       for (let x = 0; x < this.width; ++x) {
         const current = this.grid[y][x];
+        const value = current === 0 ? 0 : 255;
+        this.updateFramebuffer(x, y, value);
 
         if (current === 0) {
           continue;
@@ -26,7 +37,7 @@ export default class FallingSandGame {
           const atBottom = y === this.height - 1;
 
           if (atBottom) {
-              continue;
+            continue;
           }
 
           const atLeftEdge = x === 0;
@@ -53,9 +64,13 @@ export default class FallingSandGame {
   }
 
   createParticle(x: number, y: number): void {
-    this.grid[y][x-1] = 1;
-    this.grid[y+2][x] = 1;
-    this.grid[y][x+1] = 1;
-    this.grid[y-1][x] = 1;
+    try {
+      this.grid[y][x - 1] = 1;
+      this.grid[y + 2][x] = 1;
+      this.grid[y][x + 1] = 1;
+      this.grid[y - 1][x] = 1;
+    } catch (error) {
+      console.error(error);
+    }
   }
 }

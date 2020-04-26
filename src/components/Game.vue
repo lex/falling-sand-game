@@ -1,12 +1,14 @@
 <template>
-  <div>
+<div>
     <canvas
       v-bind:width="sandGame.width"
       v-bind:height="sandGame.height"
       ref="canvas"
       style="border: 1px solid black;"
     ></canvas>
-  </div>
+    <p>{{this.fps}} fps</p>
+    <p>{{this.mouseX}},{{this.mouseY}}</p>
+</div>
 </template>
 
 <script lang="ts">
@@ -26,21 +28,18 @@ export default class Game extends Vue {
 
   private drawing = false;
 
-  interval = 0;
-  tickRate = 16; // milliseconds
-
   private pixiApp!: PIXI.Application;
-
-  private frameBuffer = new Uint8Array(this.sandGame.height * this.sandGame.width * 3).fill(0);
+  private lastMilliseconds = 0;
+  private fps = 0;
 
   private texture = PIXI.Texture.fromBuffer(
-      this.frameBuffer,
-      this.sandGame.width,
-      this.sandGame.height,
-      {
-        format: PIXI.FORMATS.RGB,
-        type: PIXI.TYPES.UNSIGNED_BYTE
-      }
+    this.sandGame.framebuffer,
+    this.sandGame.width,
+    this.sandGame.height,
+    {
+      format: PIXI.FORMATS.RGB,
+      type: PIXI.TYPES.UNSIGNED_BYTE,
+    }
   );
 
   private sprite: PIXI.Sprite = PIXI.Sprite.from(this.texture);
@@ -56,11 +55,20 @@ export default class Game extends Vue {
     });
 
     this.sprite.interactive = true;
+    this.pixiApp.renderer.plugins.interaction.moveWhenInside = true;
 
-    this.sprite.on("pointermove", () => {
-      const mouse = this.pixiApp.renderer.plugins.interaction.mouse.global;
-      this.mouseX = Math.floor(mouse.x);
-      this.mouseY = Math.floor(mouse.y);
+    this.sprite.on("touchmove", (event: PIXI.interaction.InteractionEvent) => {
+      this.mouseX = Math.floor(event.data.global.x);
+      this.mouseY = Math.floor(event.data.global.y);
+    });
+
+    this.sprite.on("pointermove", (event: PIXI.interaction.InteractionEvent) => {
+      this.mouseX = Math.floor(event.data.global.x);
+      this.mouseY = Math.floor(event.data.global.y);
+    });
+
+    this.sprite.on("touchstart", () => {
+      this.drawing = true;
     });
 
     this.sprite.on("pointerdown", () => {
@@ -71,51 +79,45 @@ export default class Game extends Vue {
       this.drawing = false;
     });
 
-    this.pixiApp.ticker.add((delta: number) => {
-      if (this.drawing) {
-        this.sandGame.createParticle(this.mouseX, this.mouseY);
-      }
+    this.sprite.on("touchend", () => {
+      this.drawing = false;
     });
 
     this.pixiApp.stage.addChild(this.sprite);
 
-    this.interval = setInterval(() => {
-      this.gameLoop();
-    }, this.tickRate);
+    requestAnimationFrame(this.gameLoop);
   }
 
   destroyed(): void {
-    clearInterval(this.interval);
     this.texture.destroy();
     this.sprite.destroy();
     this.pixiApp.destroy();
   }
 
-  drawGame(): void {
-    for (let y = 0; y < this.sandGame.height; ++y) {
-      for (let x = 0; x < this.sandGame.width; ++x) {
-        const value = this.sandGame.grid[y][x] == 0 ? 0 : 255;
+  calculateFPS(): void {
+    const millis = Date.now();
+    const millisSinceLast = millis - this.lastMilliseconds;
+    this.fps = Math.floor(1/(millisSinceLast)*1000);
+    this.lastMilliseconds = millis;
+  }
 
-        const position = y * (this.sandGame.width * 3) + x * 3;
-
-        this.frameBuffer[position] = value;
-        this.frameBuffer[position + 1] = value;
-        this.frameBuffer[position + 2] = value;
-      }
+  drawSand(): void {
+    if (this.drawing) {
+      this.sandGame.createParticle(this.mouseX, this.mouseY);
     }
-
-    this.texture.update();
   }
 
   gameLoop(): void {
+    this.calculateFPS();
+    this.drawSand();
+
     this.sandGame.tick();
-    // imagine having threads
-    this.renderLoop();
+
+    this.texture.update();
+
+    requestAnimationFrame(this.gameLoop);
   }
 
-  renderLoop(): void {
-    this.drawGame();
-  }
 }
 </script>
 
