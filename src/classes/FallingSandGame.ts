@@ -12,20 +12,24 @@ export default class FallingSandGame {
     );
   }
 
-  private updateFramebuffer(x: number, y: number, value: number): void {
+  private updateFramebuffer(x: number, y: number, r: number, g: number, b: number): void {
     const position = y * (this.width * 3) + x * 3;
 
-    this.framebuffer[position] = value;
-    this.framebuffer[position + 1] = value;
-    this.framebuffer[position + 2] = value;
+    this.framebuffer[position] = r;
+    this.framebuffer[position + 1] = g;
+    this.framebuffer[position + 2] = b;
   }
 
   tick(): void {
     for (let y = this.height - 1; y >= 0; --y) {
       for (let x = 0; x < this.width; ++x) {
         const current = this.grid[y][x];
-        const value = current === 0 ? 0 : 255;
-        this.updateFramebuffer(x, y, value);
+
+        const r = current === 0 ? 0 : 194;
+        const g = current === 0 ? 0 : 178;
+        const b = current === 0 ? 0 : 128;
+
+        this.updateFramebuffer(x, y, r, g, b);
 
         if (current === 0) {
           continue;
