@@ -63,7 +63,7 @@ export default class Game extends Vue {
   private paused = false;
 
   private texture = PIXI.Texture.fromBuffer(
-    this.sandGame.framebuffer,
+    this.framebuffer,
     this.gameWidth,
     this.gameHeight,
     {
