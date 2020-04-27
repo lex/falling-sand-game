@@ -1,12 +1,17 @@
-import Particle from "./Particle";
-
 export default class FallingSandGame {
-  width = 420;
-  height = 420;
-  framebuffer = new Uint8Array(this.height * this.width * 3).fill(0);
-  grid = this.createGrid();
+  width = 240;
+  height = 240;
+  framebuffer: Uint8Array;
+  grid: Array<Array<number>>;
 
-  createGrid() {
+  constructor(width: number, height: number, framebuffer: any) {
+    this.width = width;
+    this.height = height;
+    this.framebuffer = framebuffer;
+    this.grid = this.createGrid(width, height);
+  }
+
+  createGrid(width: number, height: number) {
     return Array.from({ length: this.height }, (e) =>
       Array(this.width).fill(0)
     );

@@ -1,14 +1,14 @@
 <template>
-<div>
+  <div>
     <canvas
-      v-bind:width="sandGame.width"
-      v-bind:height="sandGame.height"
+      v-bind:width="canvasWidth"
+      v-bind:height="canvasHeight"
       ref="canvas"
       style="border: 1px solid black;"
     ></canvas>
     <p>{{this.fps}} fps</p>
     <p>{{this.mouseX}},{{this.mouseY}}</p>
-</div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -19,7 +19,22 @@ import Particle from "@/classes/Particle";
 
 @Component
 export default class Game extends Vue {
-  private sandGame: FallingSandGame = new FallingSandGame();
+  private gameWidth = 120;
+  private gameHeight = 120;
+
+  private framebuffer = new Uint8Array(
+    this.gameHeight * this.gameWidth * 3
+  ).fill(0);
+
+  private sandGame: FallingSandGame = new FallingSandGame(
+    this.gameWidth,
+    this.gameHeight,
+    this.framebuffer
+  );
+
+  private canvasScale = 4;
+  private canvasWidth = this.gameWidth * this.canvasScale;
+  private canvasHeight = this.gameHeight * this.canvasScale;
 
   private canvas!: HTMLCanvasElement;
 
@@ -34,11 +49,11 @@ export default class Game extends Vue {
 
   private texture = PIXI.Texture.fromBuffer(
     this.sandGame.framebuffer,
-    this.sandGame.width,
-    this.sandGame.height,
+    this.gameWidth,
+    this.gameHeight,
     {
       format: PIXI.FORMATS.RGB,
-      type: PIXI.TYPES.UNSIGNED_BYTE,
+      type: PIXI.TYPES.UNSIGNED_BYTE
     }
   );
 
@@ -48,44 +63,47 @@ export default class Game extends Vue {
     const canvas = this.$refs.canvas as HTMLCanvasElement;
     this.canvas = canvas;
 
+    this.setupPixi();
+    this.bindInputEvents();
+
+    requestAnimationFrame(this.gameLoop);
+  }
+
+  setupPixi(): void {
     this.pixiApp = new PIXI.Application({
-      width: this.sandGame.width,
-      height: this.sandGame.height,
-      view: this.canvas,
+      width: this.canvasWidth,
+      height: this.canvasHeight,
+      view: this.canvas
     });
 
     this.sprite.interactive = true;
+
+    this.sprite.setTransform(0, 0, this.canvasScale, this.canvasScale);
     this.pixiApp.renderer.plugins.interaction.moveWhenInside = true;
 
-    this.sprite.on("touchmove", (event: PIXI.interaction.InteractionEvent) => {
-      this.mouseX = Math.floor(event.data.global.x);
-      this.mouseY = Math.floor(event.data.global.y);
-    });
-
-    this.sprite.on("pointermove", (event: PIXI.interaction.InteractionEvent) => {
-      this.mouseX = Math.floor(event.data.global.x);
-      this.mouseY = Math.floor(event.data.global.y);
-    });
-
-    this.sprite.on("touchstart", () => {
-      this.drawing = true;
-    });
-
-    this.sprite.on("pointerdown", () => {
-      this.drawing = true;
-    });
-
-    this.sprite.on("pointerup", () => {
-      this.drawing = false;
-    });
-
-    this.sprite.on("touchend", () => {
-      this.drawing = false;
-    });
-
     this.pixiApp.stage.addChild(this.sprite);
+  }
 
-    requestAnimationFrame(this.gameLoop);
+  bindInputEvents(): void {
+    this.sprite.on("touchmove", this.onTouchPointerMove);
+    this.sprite.on("pointermove", this.onTouchPointerMove);
+    this.sprite.on("touchstart", this.startDrawing);
+    this.sprite.on("touchend", this.stopDrawing);
+    this.sprite.on("pointerdown", this.startDrawing);
+    this.sprite.on("pointerup", this.stopDrawing);
+  }
+
+  onTouchPointerMove(event: PIXI.interaction.InteractionEvent): void {
+    this.mouseX = Math.floor(event.data.global.x / this.canvasScale);
+    this.mouseY = Math.floor(event.data.global.y / this.canvasScale);
+  }
+
+  startDrawing(): void {
+    this.drawing = true;
+  }
+
+  stopDrawing(): void {
+    this.drawing = false;
   }
 
   destroyed(): void {
@@ -97,7 +115,7 @@ export default class Game extends Vue {
   calculateFPS(): void {
     const millis = Date.now();
     const millisSinceLast = millis - this.lastMilliseconds;
-    this.fps = Math.floor(1/(millisSinceLast)*1000);
+    this.fps = Math.floor((1 / millisSinceLast) * 1000);
     this.lastMilliseconds = millis;
   }
 
@@ -117,7 +135,6 @@ export default class Game extends Vue {
 
     requestAnimationFrame(this.gameLoop);
   }
-
 }
 </script>
 
