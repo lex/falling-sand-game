@@ -1,8 +1,12 @@
+import Color from "./Color";
+import Particle from "./Particle";
+import ParticleType from "./ParticleType";
+
 export default class FallingSandGame {
-  width = 240;
-  height = 240;
+  width = 0;
+  height = 0;
   framebuffer: Uint8Array;
-  grid: Array<Array<number>>;
+  grid: Array<Array<Particle>>;
 
   constructor(width: number, height: number, framebuffer: any) {
     this.width = width;
@@ -12,9 +16,17 @@ export default class FallingSandGame {
   }
 
   createGrid(width: number, height: number) {
-    return Array.from({ length: this.height }, (e) =>
-      Array(this.width).fill(0)
-    );
+    const grid = new Array(height);
+
+    for (let y = 0; y < height; ++y) {
+      grid[y] = new Array(width);
+
+      for (let x = 0; x < width; ++x) {
+        grid[y][x] = new Particle(ParticleType.EMPTY);
+      }
+    }
+
+    return grid;
   }
 
   private updateFramebuffer(x: number, y: number, r: number, g: number, b: number): void {
@@ -28,56 +40,53 @@ export default class FallingSandGame {
   tick(): void {
     for (let y = this.height - 1; y >= 0; --y) {
       for (let x = 0; x < this.width; ++x) {
-        const current = this.grid[y][x];
+        const current = this.grid[y][x] as Particle;
+        const colors: Color = current.color;
 
-        const r = current === 0 ? 0 : 194;
-        const g = current === 0 ? 0 : 178;
-        const b = current === 0 ? 0 : 128;
+        this.updateFramebuffer(x, y, colors.r, colors.g, colors.b);
 
-        this.updateFramebuffer(x, y, r, g, b);
-
-        if (current === 0) {
+        if (current.type === ParticleType.EMPTY) {
           continue;
         }
 
-        // sand
-        // fix this it's horrible
-        if (current === 1) {
-          const atBottom = y === this.height - 1;
+        const atBottom = y === this.height - 1;
 
-          if (atBottom) {
-            continue;
-          }
+        if (atBottom) {
+          continue;
+        }
 
-          const atLeftEdge = x === 0;
-          const atRightEdge = x === this.width - 1;
+        const atLeftEdge = x === 0;
+        const atRightEdge = x === this.width - 1;
 
-          const downLeft =
-            !atLeftEdge && !atBottom ? this.grid[y + 1][x - 1] : undefined;
-          const downRight =
-            !atRightEdge && !atBottom ? this.grid[y + 1][x + 1] : undefined;
+        const downLeft =
+          !atLeftEdge && !atBottom ? this.grid[y + 1][x - 1] : undefined;
+        const downRight =
+          !atRightEdge && !atBottom ? this.grid[y + 1][x + 1] : undefined;
 
-          if (!this.grid[y + 1][x]) {
-            this.grid[y][x] = 0;
-            this.grid[y + 1][x] = 1;
-          } else if (downLeft === 0) {
-            this.grid[y][x] = 0;
-            this.grid[y + 1][x - 1] = 1;
-          } else if (downRight === 0) {
-            this.grid[y][x] = 0;
-            this.grid[y + 1][x + 1] = 1;
-          }
+        switch (current.type as number) {
+          case ParticleType.SAND:
+            if (this.grid[y + 1][x].type === ParticleType.EMPTY) {
+              this.grid[y][x].type = ParticleType.EMPTY;
+              this.grid[y + 1][x].type = ParticleType.SAND;
+            } else if (downLeft?.type === ParticleType.EMPTY) {
+              this.grid[y][x].type = ParticleType.EMPTY;
+              this.grid[y + 1][x - 1].type = ParticleType.SAND;
+            } else if (downRight?.type === ParticleType.EMPTY) {
+              this.grid[y][x].type = ParticleType.EMPTY;
+              this.grid[y + 1][x + 1].type = ParticleType.SAND;
+            }
+            break;
+          default:
+            break;
         }
       }
     }
   }
 
-  createParticle(x: number, y: number): void {
+  createParticle(x: number, y: number, type: ParticleType): void {
+    // todo check bounds
     try {
-      this.grid[y][x - 1] = 1;
-      this.grid[y + 2][x] = 1;
-      this.grid[y][x + 1] = 1;
-      this.grid[y - 1][x] = 1;
+      this.grid[y][x].type = type;
     } catch (error) {
       console.error(error);
     }

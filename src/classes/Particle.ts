@@ -1,11 +1,15 @@
-export default class Particle {
-    x = 0;
-    y = 0;
-    empty = true;
+import Color from "./Color";
+import ParticleType from "./ParticleType";
+import ParticleColors from "./ParticleColors";
 
-    constructor(x: number, y: number, empty: boolean) {
-        this.x = x;
-        this.y = y;
-        this.empty = empty;
+export default class Particle {
+    type = ParticleType.EMPTY;
+
+    constructor(type: ParticleType) {
+        this.type = type;
+    }
+
+    get color(): Color {
+        return ParticleColors[this.type as number];
     }
 }

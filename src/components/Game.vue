@@ -8,6 +8,8 @@
     ></canvas>
     <p>{{this.fps}} fps</p>
     <p>{{this.mouseX}},{{this.mouseY}}</p>
+    <p>{{this.particleType}}</p>
+    <Button v-on:click="onPauseButtonClicked">pause</Button>
   </div>
 </template>
 
@@ -16,6 +18,7 @@ import { Component, Vue } from "vue-property-decorator";
 import * as PIXI from "pixi.js";
 import FallingSandGame from "@/classes/FallingSandGame";
 import Particle from "@/classes/Particle";
+import ParticleType from "@/classes/ParticleType";
 
 @Component
 export default class Game extends Vue {
@@ -32,6 +35,8 @@ export default class Game extends Vue {
     this.framebuffer
   );
 
+  private particleType: ParticleType = ParticleType.SAND;
+
   private canvasScale = 4;
   private canvasWidth = this.gameWidth * this.canvasScale;
   private canvasHeight = this.gameHeight * this.canvasScale;
@@ -46,6 +51,7 @@ export default class Game extends Vue {
   private pixiApp!: PIXI.Application;
   private lastMilliseconds = 0;
   private fps = 0;
+  private paused = false;
 
   private texture = PIXI.Texture.fromBuffer(
     this.sandGame.framebuffer,
@@ -121,7 +127,7 @@ export default class Game extends Vue {
 
   drawSand(): void {
     if (this.drawing) {
-      this.sandGame.createParticle(this.mouseX, this.mouseY);
+      this.sandGame.createParticle(this.mouseX, this.mouseY, this.particleType);
     }
   }
 
@@ -129,11 +135,17 @@ export default class Game extends Vue {
     this.calculateFPS();
     this.drawSand();
 
-    this.sandGame.tick();
+    if (!this.paused) {
+      this.sandGame.tick();
+    }
 
     this.texture.update();
 
     requestAnimationFrame(this.gameLoop);
+  }
+
+  onPauseButtonClicked() {
+    this.paused = !this.paused;
   }
 }
 </script>
