@@ -6,10 +6,19 @@
       ref="canvas"
       style="border: 1px solid black;"
     ></canvas>
+    <div>
+    <p>{{particleTypeName}}</p>
+    <Button v-on:click="onSandClicked">sand</Button>
+    <Button v-on:click="onWaterClicked">water</Button>
+    <Button v-on:click="onEmptyClicked">empty</Button>
+    </div>
+
     <p>{{this.fps}} fps</p>
-    <p>{{this.mouseX}},{{this.mouseY}}</p>
-    <p>{{this.particleType}}</p>
-    <Button v-on:click="onPauseButtonClicked">pause</Button>
+    <Button v-on:click="onPauseClicked">pause</Button>
+    <div v-if="paused">
+      <p>PAUSED</p>
+      <Button v-on:click="onStepClicked">step</Button>
+    </div>
   </div>
 </template>
 
@@ -144,8 +153,28 @@ export default class Game extends Vue {
     requestAnimationFrame(this.gameLoop);
   }
 
-  onPauseButtonClicked() {
+  onPauseClicked() {
     this.paused = !this.paused;
+  }
+
+  onStepClicked() {
+    this.sandGame.tick();
+  }
+
+  onSandClicked() {
+    this.particleType = ParticleType.SAND;
+  }
+
+  onWaterClicked() {
+    this.particleType = ParticleType.WATER;
+  }
+
+  onEmptyClicked() {
+    this.particleType = ParticleType.EMPTY;
+  }
+
+  get particleTypeName(): string {
+    return ParticleType[this.particleType];
   }
 }
 </script>

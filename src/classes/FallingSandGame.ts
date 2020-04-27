@@ -3,10 +3,10 @@ import Particle from "./Particle";
 import ParticleType from "./ParticleType";
 
 export default class FallingSandGame {
-  width = 0;
-  height = 0;
-  framebuffer: Uint8Array;
-  grid: Array<Array<Particle>>;
+  private width = 0;
+  private height = 0;
+  private framebuffer: Uint8Array;
+  private grid: Array<Array<Particle>>;
 
   constructor(width: number, height: number, framebuffer: any) {
     this.width = width;
@@ -15,7 +15,7 @@ export default class FallingSandGame {
     this.grid = this.createGrid(width, height);
   }
 
-  createGrid(width: number, height: number) {
+  private createGrid(width: number, height: number) {
     const grid = new Array(height);
 
     for (let y = 0; y < height; ++y) {
@@ -58,6 +58,12 @@ export default class FallingSandGame {
         const atLeftEdge = x === 0;
         const atRightEdge = x === this.width - 1;
 
+        const left =
+          !atLeftEdge ? this.grid[y][x - 1] : undefined;
+        const right =
+          !atRightEdge ? this.grid[y][x + 1] : undefined;
+        const down =
+          !atBottom ? this.grid[y + 1][x] : undefined;
         const downLeft =
           !atLeftEdge && !atBottom ? this.grid[y + 1][x - 1] : undefined;
         const downRight =
@@ -65,17 +71,39 @@ export default class FallingSandGame {
 
         switch (current.type as number) {
           case ParticleType.SAND:
-            if (this.grid[y + 1][x].type === ParticleType.EMPTY) {
-              this.grid[y][x].type = ParticleType.EMPTY;
-              this.grid[y + 1][x].type = ParticleType.SAND;
+            if (down?.type === ParticleType.EMPTY) {
+              current.type = ParticleType.EMPTY;
+              down.type = ParticleType.SAND;
             } else if (downLeft?.type === ParticleType.EMPTY) {
-              this.grid[y][x].type = ParticleType.EMPTY;
-              this.grid[y + 1][x - 1].type = ParticleType.SAND;
+              current.type = ParticleType.EMPTY;
+              downLeft.type = ParticleType.SAND;
             } else if (downRight?.type === ParticleType.EMPTY) {
-              this.grid[y][x].type = ParticleType.EMPTY;
-              this.grid[y + 1][x + 1].type = ParticleType.SAND;
+              current.type = ParticleType.EMPTY;
+              downRight.type = ParticleType.SAND;
             }
+
             break;
+
+          case ParticleType.WATER:
+            if (down?.type === ParticleType.EMPTY) {
+              current.type = ParticleType.EMPTY;
+              down.type = ParticleType.WATER;
+            } else if (downLeft?.type === ParticleType.EMPTY) {
+              current.type = ParticleType.EMPTY;
+              downLeft.type = ParticleType.WATER;
+            } else if (downRight?.type === ParticleType.EMPTY) {
+              current.type = ParticleType.EMPTY;
+              downRight.type = ParticleType.WATER;
+            } else if (left?.type === ParticleType.EMPTY) {
+              current.type = ParticleType.EMPTY;
+              left.type = ParticleType.WATER;
+            } else if (right?.type === ParticleType.EMPTY) {
+              current.type = ParticleType.EMPTY;
+              right.type = ParticleType.WATER;
+            }
+
+            break;
+
           default:
             break;
         }
