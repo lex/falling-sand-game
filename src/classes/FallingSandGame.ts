@@ -211,8 +211,13 @@ export default class FallingSandGame {
   createParticle(x: number, y: number, type: ParticleType): void {
     // todo check bounds
     try {
-      this.getParticleAt(this.inputBuffer, x, y)?.setType(type);
-      this.getParticleAt(this.inputBuffer, x, y)?.setUpdated(false);
+      const particle = this.getParticleAt(this.inputBuffer, x, y);
+
+      if (type === ParticleType.EMPTY) {
+        particle?.clear();
+      }
+
+      particle?.setType(type);
     } catch (error) {
       console.error(error);
     }
