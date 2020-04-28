@@ -1,5 +1,6 @@
 import Color from "./Color";
 import Particle from "./Particle";
+import ParticleColors from "./ParticleColors";
 import ParticleType from "./ParticleType";
 
 export default class FallingSandGame {
@@ -9,7 +10,7 @@ export default class FallingSandGame {
   private inputBuffer: Array<Particle>;
   private outputBuffer: Array<Particle>;
 
-  constructor(width: number, height: number, framebuffer: any) {
+  constructor(width: number, height: number, framebuffer: Uint8Array) {
     this.width = width;
     this.height = height;
     this.framebuffer = framebuffer;
@@ -37,15 +38,26 @@ export default class FallingSandGame {
         buffer[index].clear();
 
         // generate walls
-        if (y === 0 || y === this.height - 1 || x === 0 || x === this.width - 1) {
+        if (
+          y === 0 ||
+          y === this.height - 1 ||
+          x === 0 ||
+          x === this.width - 1
+        ) {
           buffer[index].setType(ParticleType.WALL);
-          buffer[index].updated = false;
+          buffer[index].setUpdated(false);
         }
       }
     }
   }
 
-  private drawToFramebuffer(x: number, y: number, r: number, g: number, b: number): void {
+  private drawToFramebuffer(
+    x: number,
+    y: number,
+    r: number,
+    g: number,
+    b: number
+  ): void {
     const position = y * (this.width * 3) + x * 3;
 
     this.framebuffer[position] = r;
@@ -53,12 +65,16 @@ export default class FallingSandGame {
     this.framebuffer[position + 2] = b;
   }
 
-  private getParticleAt(buffer: Array<Particle>, x: number, y: number): Particle | undefined {
+  private getParticleAt(
+    buffer: Array<Particle>,
+    x: number,
+    y: number
+  ): Particle | undefined {
     return buffer[y * this.height + x];
   }
 
   tick(): void {
-    this.clearBuffer(this.outputBuffer)
+    this.clearBuffer(this.outputBuffer);
 
     this.updateGame();
 
@@ -68,12 +84,14 @@ export default class FallingSandGame {
   }
 
   private updateGame(): void {
-
     for (let y = 0; y < this.height; ++y) {
       for (let x = 0; x < this.width; ++x) {
         const currentParticle = this.getParticleAt(this.inputBuffer, x, y);
 
-        if (currentParticle?.getType() === ParticleType.EMPTY || currentParticle?.getType() === ParticleType.WALL) {
+        if (
+          currentParticle?.getType() === ParticleType.EMPTY ||
+          currentParticle?.getType() === ParticleType.WALL
+        ) {
           continue;
         }
 
@@ -96,33 +114,40 @@ export default class FallingSandGame {
   private updateSand(x: number, y: number): void {
     const currentParticle = this.getParticleAt(this.inputBuffer, x, y);
 
-    const down =
-      this.getParticleAt(this.inputBuffer, x, y + 1);
-    const downLeft =
-      this.getParticleAt(this.inputBuffer, x - 1, y + 1);
-    const downRight =
-      this.getParticleAt(this.inputBuffer, x + 1, y + 1);
+    const down = this.getParticleAt(this.inputBuffer, x, y + 1);
+    const downLeft = this.getParticleAt(this.inputBuffer, x - 1, y + 1);
+    const downRight = this.getParticleAt(this.inputBuffer, x + 1, y + 1);
 
     // check for empty spots
     if (down?.getType() === ParticleType.EMPTY) {
-      this.getParticleAt(this.outputBuffer, x, y + 1)?.setType(currentParticle!.getType());
+      this.getParticleAt(this.outputBuffer, x, y + 1)?.setType(
+        currentParticle?.getType() ?? ParticleType.EMPTY
+      );
       return;
     } else if (downLeft?.getType() === ParticleType.EMPTY) {
-      this.getParticleAt(this.outputBuffer, x - 1, y + 1)?.setType(currentParticle!.getType());
+      this.getParticleAt(this.outputBuffer, x - 1, y + 1)?.setType(
+        currentParticle?.getType() ?? ParticleType.EMPTY
+      );
       return;
     } else if (downRight?.getType() === ParticleType.EMPTY) {
-      this.getParticleAt(this.outputBuffer, x + 1, y + 1)?.setType(currentParticle!.getType());
+      this.getParticleAt(this.outputBuffer, x + 1, y + 1)?.setType(
+        currentParticle?.getType() ?? ParticleType.EMPTY
+      );
       return;
     }
 
     // try to move through water
     if (down?.getType() === ParticleType.WATER) {
       this.getParticleAt(this.outputBuffer, x, y)?.setType(down?.getType());
-      this.getParticleAt(this.outputBuffer, x, y + 1)?.setType(currentParticle!.getType())
+      this.getParticleAt(this.outputBuffer, x, y + 1)?.setType(
+        currentParticle?.getType() ?? ParticleType.EMPTY
+      );
       return;
     }
 
-    this.getParticleAt(this.outputBuffer, x, y)?.setType(currentParticle!.getType());
+    this.getParticleAt(this.outputBuffer, x, y)?.setType(
+      currentParticle?.getType() ?? ParticleType.EMPTY
+    );
   }
 
   private updateWater(x: number, y: number): void {
@@ -131,16 +156,11 @@ export default class FallingSandGame {
     let newX = x;
     let newY = y;
 
-    const left =
-      this.getParticleAt(this.inputBuffer, x - 1, y);
-    const right =
-      this.getParticleAt(this.inputBuffer, x + 1, y);
-    const down =
-      this.getParticleAt(this.inputBuffer, x, y + 1);
-    const downLeft =
-      this.getParticleAt(this.inputBuffer, x - 1, y + 1);
-    const downRight =
-      this.getParticleAt(this.inputBuffer, x + 1, y + 1);
+    const left = this.getParticleAt(this.inputBuffer, x - 1, y);
+    const right = this.getParticleAt(this.inputBuffer, x + 1, y);
+    const down = this.getParticleAt(this.inputBuffer, x, y + 1);
+    const downLeft = this.getParticleAt(this.inputBuffer, x - 1, y + 1);
+    const downRight = this.getParticleAt(this.inputBuffer, x + 1, y + 1);
 
     if (down?.getType() === ParticleType.EMPTY) {
       newX = x;
@@ -162,9 +182,11 @@ export default class FallingSandGame {
     const newParticle = this.getParticleAt(this.outputBuffer, newX, newY);
 
     if (newParticle?.getType() === ParticleType.EMPTY) {
-      newParticle.setType(currentParticle!.getType());
+      newParticle.setType(currentParticle?.getType() ?? ParticleType.EMPTY);
     } else {
-      this.getParticleAt(this.outputBuffer, x, y)?.setType(currentParticle!.getType());
+      this.getParticleAt(this.outputBuffer, x, y)?.setType(
+        currentParticle?.getType() ?? ParticleType.EMPTY
+      );
     }
   }
 
@@ -172,7 +194,8 @@ export default class FallingSandGame {
     for (let y = 0; y < this.height; ++y) {
       for (let x = 0; x < this.width; ++x) {
         const current = this.getParticleAt(this.outputBuffer, x, y);
-        const colors: Color = current!.color;
+        const colors: Color =
+          current?.color ?? ParticleColors[ParticleType.EMPTY as number];
 
         this.drawToFramebuffer(x, y, colors.r, colors.g, colors.b);
       }
@@ -189,7 +212,7 @@ export default class FallingSandGame {
     // todo check bounds
     try {
       this.getParticleAt(this.inputBuffer, x, y)?.setType(type);
-      this.getParticleAt(this.inputBuffer, x, y)!.updated = false;
+      this.getParticleAt(this.inputBuffer, x, y)?.setUpdated(false);
     } catch (error) {
       console.error(error);
     }

@@ -7,14 +7,18 @@
       style="border: 1px solid black;"
     ></canvas>
     <div>
-    <p>{{particleTypeName}}</p>
-    <Button v-on:click="onSandClicked">sand</Button>
-    <Button v-on:click="onWaterClicked">water</Button>
-    <Button v-on:click="onEmptyClicked">empty</Button>
+      <p>{{ particleTypeName }}</p>
+      <Button v-on:click="onSandClicked">sand</Button>
+      <Button v-on:click="onWaterClicked">water</Button>
+      <Button v-on:click="onEmptyClicked">empty</Button>
     </div>
 
-    <p>{{this.fps}} fps</p>
-    <Button v-on:click="onPauseClicked">{{paused ? "resume" : "pause"}}</Button>
+    <p>{{ this.fps }} fps</p>
+
+    <Button v-on:click="onPauseClicked">
+      {{ paused ? "resume" : "pause" }}
+    </Button>
+
     <div v-if="paused">
       <p>PAUSED</p>
       <Button v-on:click="onStepClicked">step</Button>
@@ -26,7 +30,6 @@
 import { Component, Vue } from "vue-property-decorator";
 import * as PIXI from "pixi.js";
 import FallingSandGame from "@/classes/FallingSandGame";
-import Particle from "@/classes/Particle";
 import ParticleType from "@/classes/ParticleType";
 
 @Component

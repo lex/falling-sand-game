@@ -1,8 +1,8 @@
 enum ParticleType {
-    EMPTY,
-    WALL,
-    SAND,
-    WATER,
+  EMPTY,
+  WALL,
+  SAND,
+  WATER
 }
 
 export default ParticleType;
