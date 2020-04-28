@@ -14,7 +14,7 @@
     </div>
 
     <p>{{this.fps}} fps</p>
-    <Button v-on:click="onPauseClicked">pause</Button>
+    <Button v-on:click="onPauseClicked">{{paused ? "resume" : "pause"}}</Button>
     <div v-if="paused">
       <p>PAUSED</p>
       <Button v-on:click="onStepClicked">step</Button>

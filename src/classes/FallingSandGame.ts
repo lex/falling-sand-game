@@ -34,18 +34,13 @@ export default class FallingSandGame {
       for (let x = 0; x < this.height; ++x) {
         const index = y * this.height + x;
 
-        // need to do this here so we can empty the particles
-        buffer[index].updated = false;
+        buffer[index].clear();
 
         // generate walls
         if (y === 0 || y === this.height - 1 || x === 0 || x === this.width - 1) {
-          buffer[index].type = ParticleType.WALL;
-        } else {
-          buffer[index].type = ParticleType.EMPTY;
+          buffer[index].setType(ParticleType.WALL);
+          buffer[index].updated = false;
         }
-
-        // and again so we can update them during the simulation
-        buffer[index].updated = false;
       }
     }
   }
@@ -76,13 +71,13 @@ export default class FallingSandGame {
 
     for (let y = 0; y < this.height; ++y) {
       for (let x = 0; x < this.width; ++x) {
-        const current = this.getParticleAt(this.inputBuffer, x, y);
+        const currentParticle = this.getParticleAt(this.inputBuffer, x, y);
 
-        if (current?.type === ParticleType.EMPTY || current?.type === ParticleType.WALL) {
+        if (currentParticle?.getType() === ParticleType.EMPTY || currentParticle?.getType() === ParticleType.WALL) {
           continue;
         }
 
-        switch (current?.type as number) {
+        switch (currentParticle?.getType() as number) {
           case ParticleType.SAND:
             this.updateSand(x, y);
             break;
@@ -99,10 +94,7 @@ export default class FallingSandGame {
   }
 
   private updateSand(x: number, y: number): void {
-    const currentParticle = this.getParticleAt(this.inputBuffer, x, y)!;
-
-    let newX = x;
-    let newY = y;
+    const currentParticle = this.getParticleAt(this.inputBuffer, x, y);
 
     const down =
       this.getParticleAt(this.inputBuffer, x, y + 1);
@@ -111,34 +103,26 @@ export default class FallingSandGame {
     const downRight =
       this.getParticleAt(this.inputBuffer, x + 1, y + 1);
 
-    // do emptys
-    if (down?.type === ParticleType.EMPTY) {
-      newX = x;
-      newY = y + 1;
-      this.getParticleAt(this.outputBuffer, newX, newY)!.type = currentParticle.type;
+    // check for empty spots
+    if (down?.getType() === ParticleType.EMPTY) {
+      this.getParticleAt(this.outputBuffer, x, y + 1)?.setType(currentParticle!.getType());
       return;
-    } else if (downLeft?.type === ParticleType.EMPTY) {
-      newX = x - 1;
-      newY = y + 1;
-      this.getParticleAt(this.outputBuffer, newX, newY)!.type = currentParticle.type;
+    } else if (downLeft?.getType() === ParticleType.EMPTY) {
+      this.getParticleAt(this.outputBuffer, x - 1, y + 1)?.setType(currentParticle!.getType());
       return;
-    } else if (downRight?.type === ParticleType.EMPTY) {
-      newX = x + 1;
-      newY = y + 1;
-      this.getParticleAt(this.outputBuffer, newX, newY)!.type = currentParticle.type;
+    } else if (downRight?.getType() === ParticleType.EMPTY) {
+      this.getParticleAt(this.outputBuffer, x + 1, y + 1)?.setType(currentParticle!.getType());
       return;
     }
 
     // try to move through water
-    if (down?.type === ParticleType.WATER) {
-      newX = x;
-      newY = y + 1;
-      this.getParticleAt(this.outputBuffer, x, y)!.type = down!.type;
-      this.getParticleAt(this.outputBuffer, newX, newY)!.type = currentParticle!.type;
+    if (down?.getType() === ParticleType.WATER) {
+      this.getParticleAt(this.outputBuffer, x, y)?.setType(down?.getType());
+      this.getParticleAt(this.outputBuffer, x, y + 1)?.setType(currentParticle!.getType())
       return;
     }
 
-    this.getParticleAt(this.outputBuffer, x, y)!.type = currentParticle!.type;
+    this.getParticleAt(this.outputBuffer, x, y)?.setType(currentParticle!.getType());
   }
 
   private updateWater(x: number, y: number): void {
@@ -158,29 +142,29 @@ export default class FallingSandGame {
     const downRight =
       this.getParticleAt(this.inputBuffer, x + 1, y + 1);
 
-    if (down?.type === ParticleType.EMPTY) {
+    if (down?.getType() === ParticleType.EMPTY) {
       newX = x;
       newY = y + 1;
-    } else if (downLeft?.type === ParticleType.EMPTY) {
+    } else if (downLeft?.getType() === ParticleType.EMPTY) {
       newX = x - 1;
       newY = y + 1;
-    } else if (downRight?.type === ParticleType.EMPTY) {
+    } else if (downRight?.getType() === ParticleType.EMPTY) {
       newX = x + 1;
       newY = y + 1;
-    } else if (left?.type === ParticleType.EMPTY) {
+    } else if (left?.getType() === ParticleType.EMPTY) {
       newX = x - 1;
       newY = y;
-    } else if (right?.type === ParticleType.EMPTY) {
+    } else if (right?.getType() === ParticleType.EMPTY) {
       newX = x + 1;
       newY = y;
     }
 
     const newParticle = this.getParticleAt(this.outputBuffer, newX, newY);
 
-    if (newParticle?.type === ParticleType.EMPTY) {
-      newParticle.type = currentParticle!.type;
+    if (newParticle?.getType() === ParticleType.EMPTY) {
+      newParticle.setType(currentParticle!.getType());
     } else {
-      this.getParticleAt(this.outputBuffer, x, y)!.type = currentParticle!.type;
+      this.getParticleAt(this.outputBuffer, x, y)?.setType(currentParticle!.getType());
     }
   }
 
@@ -204,7 +188,7 @@ export default class FallingSandGame {
   createParticle(x: number, y: number, type: ParticleType): void {
     // todo check bounds
     try {
-      this.getParticleAt(this.inputBuffer, x, y)!.type = type;
+      this.getParticleAt(this.inputBuffer, x, y)?.setType(type);
       this.getParticleAt(this.inputBuffer, x, y)!.updated = false;
     } catch (error) {
       console.error(error);

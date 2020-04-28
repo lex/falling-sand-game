@@ -7,18 +7,23 @@ export default class Particle {
     updated = false;
 
     constructor(type: ParticleType) {
-        this.type = type;
+        this._type = type;
     }
 
     get color(): Color {
-        return ParticleColors[this.type as number];
+        return ParticleColors[this._type as number];
     }
 
-    get type(): ParticleType {
+    clear(): void {
+        this._type = ParticleType.EMPTY;
+        this.updated = false;
+    }
+
+    getType(): ParticleType {
         return this._type;
     }
 
-    set type(type: ParticleType) {
+    setType(type: ParticleType): void {
         if (!this.updated) {
             this.updated = true;
             this._type = type;
