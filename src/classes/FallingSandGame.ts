@@ -1,3 +1,4 @@
+import BrushSize from "./BrushSize";
 import Color from "./Color";
 import Particle from "./Particle";
 import ParticleColors from "./ParticleColors";
@@ -208,16 +209,59 @@ export default class FallingSandGame {
     this.outputBuffer = temp;
   }
 
-  createParticle(x: number, y: number, type: ParticleType): void {
+  createParticle(
+    x: number,
+    y: number,
+    type: ParticleType,
+    brushSize: BrushSize
+  ): void {
     // todo check bounds
     try {
-      const particle = this.getParticleAt(this.inputBuffer, x, y);
+      switch (brushSize as number) {
+        case BrushSize.SMALL: {
+          const particle = this.getParticleAt(this.inputBuffer, x, y);
 
-      if (type === ParticleType.EMPTY) {
-        particle?.clear();
+          if (type === ParticleType.EMPTY) {
+            particle?.clear();
+          }
+
+          particle?.setType(type);
+
+          break;
+        }
+        case BrushSize.MEDIUM: {
+          for (let i = -1; i < 2; ++i) {
+            const xParticle = this.getParticleAt(this.inputBuffer, x + i, y);
+            const yParticle = this.getParticleAt(this.inputBuffer, x, y + i);
+
+            if (type === ParticleType.EMPTY) {
+              xParticle?.clear();
+              yParticle?.clear();
+            }
+
+            xParticle?.setType(type);
+            yParticle?.setType(type);
+          }
+
+          break;
+        }
+        case BrushSize.LARGE: {
+          for (let i = -3; i < 4; ++i) {
+            const xParticle = this.getParticleAt(this.inputBuffer, x + i, y);
+            const yParticle = this.getParticleAt(this.inputBuffer, x, y + i);
+
+            if (type === ParticleType.EMPTY) {
+              xParticle?.clear();
+              yParticle?.clear();
+            }
+
+            xParticle?.setType(type);
+            yParticle?.setType(type);
+          }
+
+          break;
+        }
       }
-
-      particle?.setType(type);
     } catch (error) {
       console.error(error);
     }

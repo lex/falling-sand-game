@@ -12,6 +12,12 @@
       <Button v-on:click="onWaterClicked">water</Button>
       <Button v-on:click="onEmptyClicked">empty</Button>
     </div>
+    <div>
+      <p>{{ brushSizeName }}</p>
+      <Button v-on:click="onBrushSelected(0)">small</Button>
+      <Button v-on:click="onBrushSelected(1)">medium</Button>
+      <Button v-on:click="onBrushSelected(2)">large</Button>
+    </div>
 
     <p>{{ this.fps }} fps</p>
 
@@ -31,6 +37,7 @@ import { Component, Vue } from "vue-property-decorator";
 import * as PIXI from "pixi.js";
 import FallingSandGame from "@/classes/FallingSandGame";
 import ParticleType from "@/classes/ParticleType";
+import BrushSize from "@/classes/BrushSize";
 
 @Component
 export default class Game extends Vue {
@@ -48,6 +55,7 @@ export default class Game extends Vue {
   );
 
   private particleType: ParticleType = ParticleType.SAND;
+  private brushSize = BrushSize.SMALL;
 
   private canvasScale = 4;
   private canvasWidth = this.gameWidth * this.canvasScale;
@@ -62,6 +70,7 @@ export default class Game extends Vue {
 
   private pixiApp!: PIXI.Application;
   private lastMilliseconds = 0;
+
   private fps = 0;
   private paused = false;
 
@@ -139,7 +148,7 @@ export default class Game extends Vue {
 
   drawSand(): void {
     if (this.drawing) {
-      this.sandGame.createParticle(this.mouseX, this.mouseY, this.particleType);
+      this.sandGame.createParticle(this.mouseX, this.mouseY, this.particleType, this.brushSize);
     }
   }
 
@@ -178,6 +187,14 @@ export default class Game extends Vue {
 
   get particleTypeName(): string {
     return ParticleType[this.particleType];
+  }
+
+  get brushSizeName(): string {
+    return BrushSize[this.brushSize];
+  }
+
+  onBrushSelected(size: BrushSize) {
+    this.brushSize = size;
   }
 }
 </script>
