@@ -210,8 +210,14 @@ export default class Game extends Vue {
     for (let y = 1; y < this.gameHeight - 1; ++y) {
       for (let x = 1; x < this.gameWidth - 1; ++x) {
         let type = ParticleType.EMPTY;
-        if (~~(Math.random() * 2)) {
+        const rng = ~~(Math.random() * 3);
+
+        if (rng == 0) {
           type = ParticleType.SAND;
+        }
+
+        if (rng === 1) {
+          type = ParticleType.WATER;
         }
         this.sandGame.createParticle(x, y, type, BrushSize.SMALL);
       }
