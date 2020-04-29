@@ -152,7 +152,12 @@ export default class Game extends Vue {
 
   drawSand(): void {
     if (this.drawing) {
-      this.sandGame.createParticle(this.mouseX, this.mouseY, this.particleType, this.brushSize);
+      this.sandGame.createParticle(
+        this.mouseX,
+        this.mouseY,
+        this.particleType,
+        this.brushSize
+      );
     }
   }
 
