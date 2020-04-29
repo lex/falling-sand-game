@@ -10,10 +10,6 @@ export default class Particle {
     this._type = type;
   }
 
-  get color(): Color {
-    return ParticleColors[this._type as number];
-  }
-
   clear(): void {
     this._type = ParticleType.EMPTY;
     this._updated = false;

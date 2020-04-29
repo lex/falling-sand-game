@@ -21,6 +21,10 @@
 
     <p>{{ this.fps }} fps</p>
 
+    <Button v-on:click="debugFill">
+      debug fill
+    </Button>
+
     <Button v-on:click="onPauseClicked">
       {{ paused ? "resume" : "pause" }}
     </Button>
@@ -41,8 +45,8 @@ import BrushSize from "@/classes/BrushSize";
 
 @Component
 export default class Game extends Vue {
-  private gameWidth = 120;
-  private gameHeight = 120;
+  private gameWidth = 128;
+  private gameHeight = 128;
 
   private framebuffer = new Uint8Array(
     this.gameHeight * this.gameWidth * 3
@@ -195,6 +199,18 @@ export default class Game extends Vue {
 
   onBrushSelected(size: BrushSize) {
     this.brushSize = size;
+  }
+
+  debugFill() {
+    for (let y = 1; y < this.gameHeight - 1; ++y) {
+      for (let x = 1; x < this.gameWidth - 1; ++x) {
+        let type = ParticleType.EMPTY;
+        if (~~(Math.random() * 2)) {
+          type = ParticleType.SAND;
+        }
+        this.sandGame.createParticle(x, y, type, BrushSize.SMALL);
+      }
+    }
   }
 }
 </script>

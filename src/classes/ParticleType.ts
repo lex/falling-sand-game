@@ -1,5 +1,5 @@
 enum ParticleType {
-  EMPTY,
+  EMPTY = 0,
   WALL,
   SAND,
   WATER

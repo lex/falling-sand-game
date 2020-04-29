@@ -8,8 +8,8 @@ export default class FallingSandGame {
   private width = 0;
   private height = 0;
   private framebuffer: Uint8Array;
-  private inputBuffer: Array<Particle>;
-  private outputBuffer: Array<Particle>;
+  private inputBuffer: Uint8Array;
+  private outputBuffer: Uint8Array;
 
   constructor(width: number, height: number, framebuffer: Uint8Array) {
     this.width = width;
@@ -19,24 +19,24 @@ export default class FallingSandGame {
     this.outputBuffer = this.createBuffer();
   }
 
-  private createBuffer(): Array<Particle> {
-    const buffer = new Array(this.width * this.height);
+  private createBuffer(): Uint8Array {
+    const buffer = new Uint8Array(this.width * this.height);
     this.fillBuffer(buffer);
     return buffer;
   }
 
-  private fillBuffer(buffer: Array<Particle>): void {
+  private fillBuffer(buffer: Uint8Array): void {
     for (let i = 0; i < this.width * this.height; ++i) {
-      buffer[i] = new Particle(ParticleType.EMPTY);
+      buffer[i] = ParticleType.EMPTY;
     }
   }
 
-  private clearBuffer(buffer: Array<Particle>): void {
+  private clearBuffer(buffer: Uint8Array): void {
     for (let y = 0; y < this.height; ++y) {
       for (let x = 0; x < this.height; ++x) {
         const index = y * this.height + x;
 
-        buffer[index].clear();
+        buffer[index] = ParticleType.EMPTY;
 
         // generate walls
         if (
@@ -45,33 +45,14 @@ export default class FallingSandGame {
           x === 0 ||
           x === this.width - 1
         ) {
-          buffer[index].setType(ParticleType.WALL);
-          buffer[index].setUpdated(false);
+          buffer[index] = ParticleType.WALL;
         }
       }
     }
   }
 
-  private drawToFramebuffer(
-    x: number,
-    y: number,
-    r: number,
-    g: number,
-    b: number
-  ): void {
-    const position = y * (this.width * 3) + x * 3;
-
-    this.framebuffer[position] = r;
-    this.framebuffer[position + 1] = g;
-    this.framebuffer[position + 2] = b;
-  }
-
-  private getParticleAt(
-    buffer: Array<Particle>,
-    x: number,
-    y: number
-  ): Particle | undefined {
-    return buffer[y * this.height + x];
+  private particleIndex(x: number, y: number): number {
+    return y * this.height + x;
   }
 
   tick(): void {
@@ -87,118 +68,106 @@ export default class FallingSandGame {
   private updateGame(): void {
     for (let y = 0; y < this.height; ++y) {
       for (let x = 0; x < this.width; ++x) {
-        const currentParticle = this.getParticleAt(this.inputBuffer, x, y);
+        const type = this.inputBuffer[this.particleIndex(x, y)];
 
-        if (
-          currentParticle?.getType() === ParticleType.EMPTY ||
-          currentParticle?.getType() === ParticleType.WALL
-        ) {
+        if (type === ParticleType.EMPTY || type === ParticleType.WALL) {
           continue;
         }
 
-        switch (currentParticle?.getType() as number) {
-          case ParticleType.SAND:
-            this.updateSand(x, y);
+        const left = this.inputBuffer[this.particleIndex(x - 1, y)];
+        const right = this.inputBuffer[this.particleIndex(x + 1, y)];
+        const down = this.inputBuffer[this.particleIndex(x, y + 1)];
+        const downLeft = this.inputBuffer[this.particleIndex(x - 1, y + 1)];
+        const downRight = this.inputBuffer[this.particleIndex(x + 1, y + 1)];
+
+        switch (type) {
+          case ParticleType.SAND: {
+            // check for empty spots
+            if (down === ParticleType.EMPTY) {
+              this.outputBuffer[this.particleIndex(x, y + 1)] =
+                ParticleType.SAND;
+            } else if (downLeft === ParticleType.EMPTY) {
+              this.outputBuffer[this.particleIndex(x - 1, y + 1)] =
+                ParticleType.SAND;
+            } else if (downRight === ParticleType.EMPTY) {
+              this.outputBuffer[this.particleIndex(x + 1, y + 1)] =
+                ParticleType.SAND;
+            } else {
+              this.outputBuffer[this.particleIndex(x, y)] = ParticleType.SAND;
+            }
+
             break;
 
-          case ParticleType.WATER:
-            this.updateWater(x, y);
-            break;
+            // try to move through water
+            // if (down?.getType() === ParticleType.WATER) {
+            //   this.getParticleAt(this.outputBuffer, x, y)!.setType(
+            //     down?.getType()
+            //   );
+            //   this.getParticleAt(this.outputBuffer, x, y + 1)?.setType(
+            //     currentParticle?.getType() ?? ParticleType.EMPTY
+            //   );
+            //   break;
+            // }
 
-          default:
+            // this.getParticleAt(this.outputBuffer, x, y)?.setType(
+            //   ParticleType.SAND
+            // );
+            // break;
+          }
+          case ParticleType.WATER: {
+            if (down === ParticleType.EMPTY) {
+              this.outputBuffer[this.particleIndex(x, y + 1)] =
+                ParticleType.WATER;
+            } else if (downLeft === ParticleType.EMPTY) {
+              this.inputBuffer[this.particleIndex(x - 1, y + 1)] =
+                ParticleType.WATER;
+            } else if (downRight === ParticleType.EMPTY) {
+              this.inputBuffer[this.particleIndex(x + 1, y + 1)] =
+                ParticleType.WATER;
+            } else if (left === ParticleType.EMPTY) {
+              this.inputBuffer[this.particleIndex(x - 1, y)] =
+                ParticleType.WATER;
+            } else if (right === ParticleType.EMPTY) {
+              this.inputBuffer[this.particleIndex(x + 1, y)] =
+                ParticleType.WATER;
+            } else {
+              this.outputBuffer[this.particleIndex(x, y)] = ParticleType.WATER;
+            }
+
             break;
+          }
         }
       }
     }
   }
 
-  private updateSand(x: number, y: number): void {
-    const currentParticle = this.getParticleAt(this.inputBuffer, x, y);
+  // private updateWater(x: number, y: number): void {
+  //   const currentParticle = this.getParticleAt(this.inputBuffer, x, y);
 
-    const down = this.getParticleAt(this.inputBuffer, x, y + 1);
-    const downLeft = this.getParticleAt(this.inputBuffer, x - 1, y + 1);
-    const downRight = this.getParticleAt(this.inputBuffer, x + 1, y + 1);
+  //   let newX = x;
+  //   let newY = y;
 
-    // check for empty spots
-    if (down?.getType() === ParticleType.EMPTY) {
-      this.getParticleAt(this.outputBuffer, x, y + 1)?.setType(
-        currentParticle?.getType() ?? ParticleType.EMPTY
-      );
-      return;
-    } else if (downLeft?.getType() === ParticleType.EMPTY) {
-      this.getParticleAt(this.outputBuffer, x - 1, y + 1)?.setType(
-        currentParticle?.getType() ?? ParticleType.EMPTY
-      );
-      return;
-    } else if (downRight?.getType() === ParticleType.EMPTY) {
-      this.getParticleAt(this.outputBuffer, x + 1, y + 1)?.setType(
-        currentParticle?.getType() ?? ParticleType.EMPTY
-      );
-      return;
-    }
+  //   const newParticle = this.getParticleAt(this.outputBuffer, newX, newY);
 
-    // try to move through water
-    if (down?.getType() === ParticleType.WATER) {
-      this.getParticleAt(this.outputBuffer, x, y)?.setType(down?.getType());
-      this.getParticleAt(this.outputBuffer, x, y + 1)?.setType(
-        currentParticle?.getType() ?? ParticleType.EMPTY
-      );
-      return;
-    }
-
-    this.getParticleAt(this.outputBuffer, x, y)?.setType(
-      currentParticle?.getType() ?? ParticleType.EMPTY
-    );
-  }
-
-  private updateWater(x: number, y: number): void {
-    const currentParticle = this.getParticleAt(this.inputBuffer, x, y);
-
-    let newX = x;
-    let newY = y;
-
-    const left = this.getParticleAt(this.inputBuffer, x - 1, y);
-    const right = this.getParticleAt(this.inputBuffer, x + 1, y);
-    const down = this.getParticleAt(this.inputBuffer, x, y + 1);
-    const downLeft = this.getParticleAt(this.inputBuffer, x - 1, y + 1);
-    const downRight = this.getParticleAt(this.inputBuffer, x + 1, y + 1);
-
-    if (down?.getType() === ParticleType.EMPTY) {
-      newX = x;
-      newY = y + 1;
-    } else if (downLeft?.getType() === ParticleType.EMPTY) {
-      newX = x - 1;
-      newY = y + 1;
-    } else if (downRight?.getType() === ParticleType.EMPTY) {
-      newX = x + 1;
-      newY = y + 1;
-    } else if (left?.getType() === ParticleType.EMPTY) {
-      newX = x - 1;
-      newY = y;
-    } else if (right?.getType() === ParticleType.EMPTY) {
-      newX = x + 1;
-      newY = y;
-    }
-
-    const newParticle = this.getParticleAt(this.outputBuffer, newX, newY);
-
-    if (newParticle?.getType() === ParticleType.EMPTY) {
-      newParticle.setType(currentParticle?.getType() ?? ParticleType.EMPTY);
-    } else {
-      this.getParticleAt(this.outputBuffer, x, y)?.setType(
-        currentParticle?.getType() ?? ParticleType.EMPTY
-      );
-    }
-  }
+  //   if (newParticle?.getType() === ParticleType.EMPTY) {
+  //     newParticle.setType(currentParticle?.getType() ?? ParticleType.EMPTY);
+  //   } else {
+  //     this.getParticleAt(this.outputBuffer, x, y)?.setType(
+  //       currentParticle?.getType() ?? ParticleType.EMPTY
+  //     );
+  //   }
+  // }
 
   updateFramebuffer(): void {
     for (let y = 0; y < this.height; ++y) {
       for (let x = 0; x < this.width; ++x) {
-        const current = this.getParticleAt(this.outputBuffer, x, y);
-        const colors: Color =
-          current?.color ?? ParticleColors[ParticleType.EMPTY as number];
+        const current = this.outputBuffer[this.particleIndex(x, y)];
+        const colorIndex = current * 3; // rgb, 3 bytes per color
+        const position = y * (this.width * 3) + x * 3;
 
-        this.drawToFramebuffer(x, y, colors.r, colors.g, colors.b);
+        this.framebuffer[position] = ParticleColors[colorIndex];
+        this.framebuffer[position + 1] = ParticleColors[colorIndex + 1];
+        this.framebuffer[position + 2] = ParticleColors[colorIndex + 2];
       }
     }
   }
@@ -219,46 +188,20 @@ export default class FallingSandGame {
     try {
       switch (brushSize as number) {
         case BrushSize.SMALL: {
-          const particle = this.getParticleAt(this.inputBuffer, x, y);
-
-          if (type === ParticleType.EMPTY) {
-            particle?.clear();
-          }
-
-          particle?.setType(type);
-
+          this.inputBuffer[this.particleIndex(x, y)] = type;
           break;
         }
         case BrushSize.MEDIUM: {
           for (let i = -1; i < 2; ++i) {
-            const xParticle = this.getParticleAt(this.inputBuffer, x + i, y);
-            const yParticle = this.getParticleAt(this.inputBuffer, x, y + i);
-
-            if (type === ParticleType.EMPTY) {
-              xParticle?.clear();
-              yParticle?.clear();
-            }
-
-            xParticle?.setType(type);
-            yParticle?.setType(type);
+            this.inputBuffer[this.particleIndex(x + i, y + i)] = type;
           }
-
           break;
         }
+
         case BrushSize.LARGE: {
-          for (let i = -3; i < 4; ++i) {
-            const xParticle = this.getParticleAt(this.inputBuffer, x + i, y);
-            const yParticle = this.getParticleAt(this.inputBuffer, x, y + i);
-
-            if (type === ParticleType.EMPTY) {
-              xParticle?.clear();
-              yParticle?.clear();
-            }
-
-            xParticle?.setType(type);
-            yParticle?.setType(type);
+          for (let i = -2; i < 3; ++i) {
+            this.inputBuffer[this.particleIndex(x + i, y + i)] = type;
           }
-
           break;
         }
       }
