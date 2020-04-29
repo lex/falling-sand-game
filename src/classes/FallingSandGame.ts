@@ -115,16 +115,28 @@ export default class FallingSandGame {
         const updatedDownLeft = this.updateBuffer[indexDownLeft] !== 0;
         const updatedDownRight = this.updateBuffer[indexDownRight] !== 0;
 
+        const canMoveDown = down === ParticleType.EMPTY && !updatedDown;
+        const canMoveLeft = left === ParticleType.EMPTY && !updatedLeft;
+        const canMoveRight = right === ParticleType.EMPTY && !updatedRight;
+        const canMoveDownLeft =
+          downLeft === ParticleType.EMPTY &&
+          left === ParticleType.EMPTY &&
+          !updatedDownLeft;
+        const canMoveDownRight =
+          downRight === ParticleType.EMPTY &&
+          right === ParticleType.EMPTY &&
+          !updatedDownRight;
+
         switch (type) {
           case ParticleType.SAND: {
             // check for empty spots
-            if (down === ParticleType.EMPTY && !updatedDown) {
+            if (canMoveDown) {
               this.outputBuffer[indexDown] = ParticleType.SAND;
               this.updateBuffer[indexDown] = 1;
-            } else if (downLeft === ParticleType.EMPTY && !updatedDownLeft) {
+            } else if (canMoveDownLeft) {
               this.outputBuffer[indexDownLeft] = ParticleType.SAND;
               this.updateBuffer[indexDownLeft] = 1;
-            } else if (downRight === ParticleType.EMPTY && !updatedDownRight) {
+            } else if (canMoveDownRight) {
               this.outputBuffer[indexDownRight] = ParticleType.SAND;
               this.updateBuffer[indexDownRight] = 1;
             } else if (down === ParticleType.WATER && !updatedDown) {
@@ -141,19 +153,19 @@ export default class FallingSandGame {
           }
 
           case ParticleType.WATER: {
-            if (down === ParticleType.EMPTY && !updatedDown) {
+            if (canMoveDown) {
               this.outputBuffer[indexDown] = ParticleType.WATER;
               this.updateBuffer[indexDown] = 1;
-            } else if (downLeft === ParticleType.EMPTY && !updatedDownLeft) {
+            } else if (canMoveDownLeft) {
               this.outputBuffer[indexDownLeft] = ParticleType.WATER;
               this.updateBuffer[indexDownLeft] = 1;
-            } else if (downRight === ParticleType.EMPTY && !updatedDownRight) {
+            } else if (canMoveDownRight) {
               this.outputBuffer[indexDownRight] = ParticleType.WATER;
               this.updateBuffer[indexDownRight] = 1;
-            } else if (left === ParticleType.EMPTY && !updatedLeft) {
+            } else if (canMoveLeft) {
               this.outputBuffer[indexLeft] = ParticleType.WATER;
               this.updateBuffer[indexLeft] = 1;
-            } else if (right === ParticleType.EMPTY && !updatedRight) {
+            } else if (canMoveRight) {
               this.outputBuffer[indexRight] = ParticleType.WATER;
               this.updateBuffer[indexRight] = 1;
             } else {
