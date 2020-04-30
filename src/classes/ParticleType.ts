@@ -6,6 +6,8 @@ enum ParticleType {
   WATER,
   PLANT,
   FIRE,
+  SALT,
+  SALT_WATER,
 }
 
 export default ParticleType;

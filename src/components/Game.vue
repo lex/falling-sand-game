@@ -12,6 +12,7 @@
       <Button v-on:click="onTypeSelected(3)">water</Button>
       <Button v-on:click="onTypeSelected(4)">plant</Button>
       <Button v-on:click="onTypeSelected(5)">fire</Button>
+      <Button v-on:click="onTypeSelected(6)">salt</Button>
       <Button v-on:click="onTypeSelected(0)">empty</Button>
     </div>
     <div>

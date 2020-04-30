@@ -170,14 +170,16 @@ export default class FallingSandGame {
           }
 
           case ParticleType.WATER: {
-            const downIsPlant = down === ParticleType.PLANT;
-            const leftIsPlant = left === ParticleType.PLANT;
-            const rightIsPlant = right === ParticleType.PLANT;
-            const upIsPlant = up === ParticleType.PLANT;
+            const downIsSalt = down === ParticleType.SALT && !updatedDown;
 
             if (canMoveDown) {
               this.outputBuffer[indexDown] = ParticleType.WATER;
               this.updateBuffer[indexDown] = 1;
+            } else if (downIsSalt) {
+              this.outputBuffer[indexDown] = ParticleType.SALT_WATER;
+              this.outputBuffer[indexCurrent] = ParticleType.EMPTY;
+              this.updateBuffer[indexDown] = 1;
+              this.updateBuffer[indexCurrent] = 1;
             } else if (canMoveDownLeft) {
               this.outputBuffer[indexDownLeft] = ParticleType.WATER;
               this.updateBuffer[indexDownLeft] = 1;
@@ -199,58 +201,128 @@ export default class FallingSandGame {
           }
 
           case ParticleType.PLANT: {
-              if (left === ParticleType.WATER) {
-                this.outputBuffer[indexLeft] = ParticleType.PLANT;
-                this.updateBuffer[indexLeft] = 1;
-              }
+            if (left === ParticleType.WATER) {
+              this.outputBuffer[indexLeft] = ParticleType.PLANT;
+              this.updateBuffer[indexLeft] = 1;
+            }
 
-              if (down === ParticleType.WATER) {
-                this.outputBuffer[indexDown] = ParticleType.PLANT;
-                this.updateBuffer[indexDown] = 1;
-              }
+            if (down === ParticleType.WATER) {
+              this.outputBuffer[indexDown] = ParticleType.PLANT;
+              this.updateBuffer[indexDown] = 1;
+            }
 
-              if (right === ParticleType.WATER) {
-                this.outputBuffer[indexRight] = ParticleType.PLANT;
-                this.updateBuffer[indexRight] = 1;
-              }
+            if (right === ParticleType.WATER) {
+              this.outputBuffer[indexRight] = ParticleType.PLANT;
+              this.updateBuffer[indexRight] = 1;
+            }
 
-              if (up === ParticleType.WATER) {
-                this.outputBuffer[indexUp] = ParticleType.PLANT;
-                this.updateBuffer[indexUp] = 1;
-              }
+            if (up === ParticleType.WATER) {
+              this.outputBuffer[indexUp] = ParticleType.PLANT;
+              this.updateBuffer[indexUp] = 1;
+            }
 
             this.outputBuffer[indexCurrent] = ParticleType.PLANT;
             this.updateBuffer[indexCurrent] = 1;
             break;
           }
 
-          case ParticleType.FIRE:
-            {
-              if (left === ParticleType.PLANT) {
-                this.outputBuffer[indexLeft] = ParticleType.FIRE;
-                this.updateBuffer[indexLeft] = 1;
-              }
+          case ParticleType.FIRE: {
+            if (left === ParticleType.PLANT) {
+              this.outputBuffer[indexLeft] = ParticleType.FIRE;
+              this.updateBuffer[indexLeft] = 1;
+            }
 
-              if (down === ParticleType.PLANT) {
-                this.outputBuffer[indexDown] = ParticleType.FIRE;
-                this.updateBuffer[indexDown] = 1;
-              }
+            if (down === ParticleType.PLANT) {
+              this.outputBuffer[indexDown] = ParticleType.FIRE;
+              this.updateBuffer[indexDown] = 1;
+            }
 
-              if (right === ParticleType.PLANT) {
-                this.outputBuffer[indexRight] = ParticleType.FIRE;
-                this.updateBuffer[indexRight] = 1;
-              }
+            if (right === ParticleType.PLANT) {
+              this.outputBuffer[indexRight] = ParticleType.FIRE;
+              this.updateBuffer[indexRight] = 1;
+            }
 
-              if (up === ParticleType.PLANT) {
-                this.outputBuffer[indexUp] = ParticleType.FIRE;
-                this.updateBuffer[indexUp] = 1;
-              }
+            if (up === ParticleType.PLANT) {
+              this.outputBuffer[indexUp] = ParticleType.FIRE;
+              this.updateBuffer[indexUp] = 1;
+            }
 
+            this.outputBuffer[indexCurrent] = ParticleType.EMPTY;
+            this.updateBuffer[indexCurrent] = 1;
+            break;
+          }
+
+          case ParticleType.SALT: {
+            const waterAtBottom = down === ParticleType.WATER && !updatedDown;
+
+            // check for empty spots
+            if (canMoveDown) {
+              this.outputBuffer[indexDown] = ParticleType.SALT;
+              this.updateBuffer[indexDown] = 1;
+            } else if (waterAtBottom) {
+              this.outputBuffer[indexDown] = ParticleType.SALT_WATER;
               this.outputBuffer[indexCurrent] = ParticleType.EMPTY;
+              this.updateBuffer[indexDown] = 1;
+              this.updateBuffer[indexCurrent] = 1;
+            } else if (canMoveDownLeft) {
+              this.outputBuffer[indexDownLeft] = ParticleType.SALT;
+              this.updateBuffer[indexDownLeft] = 1;
+            } else if (canMoveDownRight) {
+              this.outputBuffer[indexDownRight] = ParticleType.SALT;
+              this.updateBuffer[indexDownRight] = 1;
+            } else {
+              this.outputBuffer[indexCurrent] = ParticleType.SALT;
               this.updateBuffer[indexCurrent] = 1;
             }
 
             break;
+          }
+
+          case ParticleType.SALT_WATER: {
+            const canSwapDownWithWater =
+              down === ParticleType.WATER && !updatedDown;
+            const canSwapDownLeftWithWater =
+              downLeft === ParticleType.WATER && !updatedDownLeft;
+            const canSwapDownRightWithWater =
+              downRight === ParticleType.WATER && !updatedDownRight;
+
+            if (canMoveDown) {
+              this.outputBuffer[indexDown] = ParticleType.SALT_WATER;
+              this.updateBuffer[indexDown] = 1;
+            } else if (canSwapDownWithWater) {
+              this.outputBuffer[indexDown] = ParticleType.SALT_WATER;
+              this.outputBuffer[indexCurrent] = ParticleType.WATER;
+              this.updateBuffer[indexDown] = 1;
+              this.updateBuffer[indexCurrent] = 1;
+            } else if (canMoveDownLeft) {
+              this.outputBuffer[indexDownLeft] = ParticleType.SALT_WATER;
+              this.updateBuffer[indexDownLeft] = 1;
+            } else if (canSwapDownLeftWithWater) {
+              this.outputBuffer[indexDownLeft] = ParticleType.SALT_WATER;
+              this.outputBuffer[indexCurrent] = ParticleType.WATER;
+              this.updateBuffer[indexDownLeft] = 1;
+              this.updateBuffer[indexCurrent] = 1;
+            } else if (canMoveDownRight) {
+              this.outputBuffer[indexDownRight] = ParticleType.SALT_WATER;
+              this.updateBuffer[indexDownRight] = 1;
+            } else if (canSwapDownRightWithWater) {
+              this.outputBuffer[indexDownRight] = ParticleType.SALT_WATER;
+              this.outputBuffer[indexCurrent] = ParticleType.WATER;
+              this.updateBuffer[indexDownRight] = 1;
+              this.updateBuffer[indexCurrent] = 1;
+            } else if (canMoveLeft) {
+              this.outputBuffer[indexLeft] = ParticleType.SALT_WATER;
+              this.updateBuffer[indexLeft] = 1;
+            } else if (canMoveRight) {
+              this.outputBuffer[indexRight] = ParticleType.SALT_WATER;
+              this.updateBuffer[indexRight] = 1;
+            } else {
+              this.outputBuffer[indexCurrent] = ParticleType.SALT_WATER;
+              this.updateBuffer[indexCurrent] = 1;
+            }
+
+            break;
+          }
         }
       }
     }

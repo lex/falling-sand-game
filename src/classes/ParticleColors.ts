@@ -6,6 +6,8 @@ const colors = [
   128, 197, 222, // WATER
   50, 205, 50,   // PLANT
   170, 16, 0,    // FIRE
+  244, 244, 244, // SALT
+  128, 230, 255, // SALT_WATER
 ];
 
 const particleColors = new Uint8Array(colors);
