@@ -45,18 +45,9 @@ import BrushSize from "@/classes/BrushSize";
 
 @Component
 export default class Game extends Vue {
-  private gameWidth = 128;
-  private gameHeight = 128;
-
-  private framebuffer = new Uint8Array(
-    this.gameHeight * this.gameWidth * 3
-  ).fill(0);
-
-  private sandGame: FallingSandGame = new FallingSandGame(
-    this.gameWidth,
-    this.gameHeight,
-    this.framebuffer
-  );
+  private sandGame: FallingSandGame = new FallingSandGame();
+  private gameWidth = this.sandGame.width;
+  private gameHeight = this.sandGame.height;
 
   private particleType: ParticleType = ParticleType.SAND;
   private brushSize = BrushSize.SMALL;
@@ -79,7 +70,7 @@ export default class Game extends Vue {
   private paused = false;
 
   private texture = PIXI.Texture.fromBuffer(
-    this.framebuffer,
+    this.sandGame.framebuffer,
     this.gameWidth,
     this.gameHeight,
     {

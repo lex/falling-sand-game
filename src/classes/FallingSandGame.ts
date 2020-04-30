@@ -2,10 +2,12 @@ import BrushSize from "./BrushSize";
 import ParticleColors from "./ParticleColors";
 import ParticleType from "./ParticleType";
 
+const GAME_WIDTH = 128;
+const GAME_HEIGHT = 128;
+
+const framebuffer = new Uint8Array(GAME_WIDTH * GAME_HEIGHT * 3).fill(0);
+
 export default class FallingSandGame {
-  private width = 0;
-  private height = 0;
-  private framebuffer: Uint8Array;
   private inputBuffer: Uint8Array;
   private outputBuffer: Uint8Array;
   private updateBuffer: Uint8Array;
@@ -13,31 +15,40 @@ export default class FallingSandGame {
   private expectedParticleCount = 0;
   private lastParticleCount = 0;
 
-  constructor(width: number, height: number, framebuffer: Uint8Array) {
-    this.width = width;
-    this.height = height;
-    this.framebuffer = framebuffer;
+  constructor() {
     this.inputBuffer = this.createBuffer();
     this.outputBuffer = this.createBuffer();
     this.updateBuffer = this.createBuffer();
   }
 
+  get width() {
+    return GAME_WIDTH;
+  }
+
+  get height() {
+    return GAME_HEIGHT;
+  }
+
+  get framebuffer() {
+    return framebuffer;
+  }
+
   private createBuffer(): Uint8Array {
-    const buffer = new Uint8Array(this.width * this.height);
+    const buffer = new Uint8Array(GAME_WIDTH * GAME_HEIGHT);
     this.fillBuffer(buffer);
     return buffer;
   }
 
   private fillBuffer(buffer: Uint8Array): void {
-    for (let i = 0; i < this.width * this.height; ++i) {
+    for (let i = 0; i < GAME_WIDTH * GAME_HEIGHT; ++i) {
       buffer[i] = ParticleType.EMPTY;
     }
   }
 
   private clearBuffers(): void {
-    for (let y = 0; y < this.height; ++y) {
-      for (let x = 0; x < this.height; ++x) {
-        const index = y * this.height + x;
+    for (let y = 0; y < GAME_HEIGHT; ++y) {
+      for (let x = 0; x < GAME_HEIGHT; ++x) {
+        const index = y * GAME_HEIGHT + x;
 
         this.outputBuffer[index] = ParticleType.EMPTY;
         this.updateBuffer[index] = ParticleType.EMPTY;
@@ -45,9 +56,9 @@ export default class FallingSandGame {
         // generate walls
         if (
           y === 0 ||
-          y === this.height - 1 ||
+          y === GAME_HEIGHT - 1 ||
           x === 0 ||
-          x === this.width - 1
+          x === GAME_WIDTH - 1
         ) {
           this.inputBuffer[index] = ParticleType.WALL;
           this.outputBuffer[index] = ParticleType.WALL;
@@ -57,7 +68,7 @@ export default class FallingSandGame {
   }
 
   private particleIndex(x: number, y: number): number {
-    return y * this.height + x;
+    return y * GAME_HEIGHT + x;
   }
 
   tick(): void {
@@ -81,8 +92,8 @@ export default class FallingSandGame {
 
     this.lastParticleCount = 0;
 
-    for (let y = 0; y < this.height; ++y) {
-      for (let x = 0; x < this.width; ++x) {
+    for (let y = 0; y < GAME_HEIGHT; ++y) {
+      for (let x = 0; x < GAME_WIDTH; ++x) {
         const indexCurrent = this.particleIndex(x, y);
         const updatedCurrent = this.updateBuffer[indexCurrent] !== 0;
         const type = this.inputBuffer[indexCurrent];
@@ -126,6 +137,7 @@ export default class FallingSandGame {
           downRight === ParticleType.EMPTY &&
           right === ParticleType.EMPTY &&
           !updatedDownRight;
+        const canSwapWithWater = down === ParticleType.WATER && !updatedDown;
 
         switch (type) {
           case ParticleType.SAND: {
@@ -139,7 +151,7 @@ export default class FallingSandGame {
             } else if (canMoveDownRight) {
               this.outputBuffer[indexDownRight] = ParticleType.SAND;
               this.updateBuffer[indexDownRight] = 1;
-            } else if (down === ParticleType.WATER && !updatedDown) {
+            } else if (canSwapWithWater) {
               this.outputBuffer[indexDown] = ParticleType.SAND;
               this.outputBuffer[indexCurrent] = ParticleType.WATER;
               this.updateBuffer[indexDown] = 1;
@@ -181,11 +193,11 @@ export default class FallingSandGame {
   }
 
   updateFramebuffer(): void {
-    for (let y = 0; y < this.height; ++y) {
-      for (let x = 0; x < this.width; ++x) {
+    for (let y = 0; y < GAME_HEIGHT; ++y) {
+      for (let x = 0; x < GAME_WIDTH; ++x) {
         const current = this.outputBuffer[this.particleIndex(x, y)];
         const colorIndex = current * 3; // rgb, 3 bytes per color
-        const position = y * (this.width * 3) + x * 3;
+        const position = y * (GAME_WIDTH * 3) + x * 3;
 
         this.framebuffer[position] = ParticleColors[colorIndex];
         this.framebuffer[position + 1] = ParticleColors[colorIndex + 1];
