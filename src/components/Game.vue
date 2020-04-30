@@ -8,9 +8,10 @@
     ></canvas>
     <div>
       <p>{{ particleTypeName }}</p>
-      <Button v-on:click="onSandClicked">sand</Button>
-      <Button v-on:click="onWaterClicked">water</Button>
-      <Button v-on:click="onEmptyClicked">empty</Button>
+      <Button v-on:click="onTypeSelected(2)">sand</Button>
+      <Button v-on:click="onTypeSelected(3)">water</Button>
+      <Button v-on:click="onTypeSelected(4)">plant</Button>
+      <Button v-on:click="onTypeSelected(0)">empty</Button>
     </div>
     <div>
       <p>{{ brushSizeName }}</p>
@@ -80,6 +81,14 @@ export default class Game extends Vue {
   );
 
   private sprite: PIXI.Sprite = PIXI.Sprite.from(this.texture);
+
+  get particleTypeName(): string {
+    return ParticleType[this.particleType];
+  }
+
+  get brushSizeName(): string {
+    return BrushSize[this.brushSize];
+  }
 
   mounted(): void {
     const canvas = this.$refs.canvas as HTMLCanvasElement;
@@ -173,24 +182,8 @@ export default class Game extends Vue {
     this.sandGame.tick();
   }
 
-  onSandClicked() {
-    this.particleType = ParticleType.SAND;
-  }
-
-  onWaterClicked() {
-    this.particleType = ParticleType.WATER;
-  }
-
-  onEmptyClicked() {
-    this.particleType = ParticleType.EMPTY;
-  }
-
-  get particleTypeName(): string {
-    return ParticleType[this.particleType];
-  }
-
-  get brushSizeName(): string {
-    return BrushSize[this.brushSize];
+  onTypeSelected(type: ParticleType) {
+    this.particleType = type;
   }
 
   onBrushSelected(size: BrushSize) {

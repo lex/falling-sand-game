@@ -108,15 +108,17 @@ export default class FallingSandGame {
 
         this.lastParticleCount++;
 
-        const indexDown = this.particleIndex(x, y + 1);
         const indexLeft = this.particleIndex(x - 1, y);
+        const indexDown = this.particleIndex(x, y + 1);
         const indexRight = this.particleIndex(x + 1, y);
+        const indexUp = this.particleIndex(x, y - 1);
         const indexDownLeft = this.particleIndex(x - 1, y + 1);
         const indexDownRight = this.particleIndex(x + 1, y + 1);
 
-        const down = this.inputBuffer[indexDown];
         const left = this.inputBuffer[indexLeft];
+        const down = this.inputBuffer[indexDown];
         const right = this.inputBuffer[indexRight];
+        const up = this.inputBuffer[indexUp];
         const downLeft = this.inputBuffer[indexDownLeft];
         const downRight = this.inputBuffer[indexDownRight];
 
@@ -137,10 +139,12 @@ export default class FallingSandGame {
           downRight === ParticleType.EMPTY &&
           right === ParticleType.EMPTY &&
           !updatedDownRight;
-        const canSwapWithWater = down === ParticleType.WATER && !updatedDown;
 
         switch (type) {
           case ParticleType.SAND: {
+            const canSwapWithWater =
+              down === ParticleType.WATER && !updatedDown;
+
             // check for empty spots
             if (canMoveDown) {
               this.outputBuffer[indexDown] = ParticleType.SAND;
@@ -165,9 +169,22 @@ export default class FallingSandGame {
           }
 
           case ParticleType.WATER: {
+            const downIsPlant = down === ParticleType.PLANT;
+            const leftIsPlant = left === ParticleType.PLANT;
+            const rightIsPlant = right === ParticleType.PLANT;
+            const upIsPlant = up === ParticleType.PLANT;
+
             if (canMoveDown) {
               this.outputBuffer[indexDown] = ParticleType.WATER;
               this.updateBuffer[indexDown] = 1;
+            } else if (
+              downIsPlant ||
+              leftIsPlant ||
+              rightIsPlant ||
+              upIsPlant
+            ) {
+              this.outputBuffer[indexCurrent] = ParticleType.PLANT;
+              this.updateBuffer[indexCurrent] = 1;
             } else if (canMoveDownLeft) {
               this.outputBuffer[indexDownLeft] = ParticleType.WATER;
               this.updateBuffer[indexDownLeft] = 1;
@@ -186,6 +203,11 @@ export default class FallingSandGame {
             }
 
             break;
+          }
+
+          case ParticleType.PLANT: {
+            this.outputBuffer[indexCurrent] = ParticleType.PLANT;
+            this.updateBuffer[indexCurrent] = 1;
           }
         }
       }

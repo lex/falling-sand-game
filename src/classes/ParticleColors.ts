@@ -1,10 +1,12 @@
-// const particleColors = {
-//   [ParticleType.EMPTY as number]: new Color(0, 0, 0),
-//   [ParticleType.WALL as number]: new Color(0, 255, 0),
-//   [ParticleType.SAND as number]: new Color(194, 178, 128),
-//   [ParticleType.WATER as number]: new Color(128, 197, 222)
-// };
+/* eslint-disable */
+const colors = [
+  0, 0, 0,       // EMPTY
+  220, 220, 220, // WALL
+  194, 178, 128, // SAND
+  128, 197, 222, // WATER
+  50, 205, 50,   // PLANT
+];
 
-const particleColors = [0, 0, 0, 0, 255, 0, 194, 178, 128, 128, 197, 222];
+const particleColors = new Uint8Array(colors);
 
 export default particleColors;
