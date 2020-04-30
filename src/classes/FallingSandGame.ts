@@ -208,7 +208,36 @@ export default class FallingSandGame {
           case ParticleType.PLANT: {
             this.outputBuffer[indexCurrent] = ParticleType.PLANT;
             this.updateBuffer[indexCurrent] = 1;
+            break;
           }
+
+          case ParticleType.FIRE:
+            {
+              if (left === ParticleType.PLANT) {
+                this.outputBuffer[indexLeft] = ParticleType.FIRE;
+                this.updateBuffer[indexLeft] = 1;
+              }
+
+              if (down === ParticleType.PLANT) {
+                this.outputBuffer[indexDown] = ParticleType.FIRE;
+                this.updateBuffer[indexDown] = 1;
+              }
+
+              if (right === ParticleType.PLANT) {
+                this.outputBuffer[indexRight] = ParticleType.FIRE;
+                this.updateBuffer[indexRight] = 1;
+              }
+
+              if (up === ParticleType.PLANT) {
+                this.outputBuffer[indexUp] = ParticleType.FIRE;
+                this.updateBuffer[indexUp] = 1;
+              }
+
+              this.outputBuffer[indexCurrent] = ParticleType.EMPTY;
+              this.updateBuffer[indexCurrent] = 1;
+            }
+
+            break;
         }
       }
     }
