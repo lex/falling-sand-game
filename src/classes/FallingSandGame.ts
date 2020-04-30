@@ -125,6 +125,7 @@ export default class FallingSandGame {
         const updatedDown = this.updateBuffer[indexDown] !== 0;
         const updatedLeft = this.updateBuffer[indexLeft] !== 0;
         const updatedRight = this.updateBuffer[indexRight] !== 0;
+        const updatedUp = this.updateBuffer[indexUp] !== 0;
         const updatedDownLeft = this.updateBuffer[indexDownLeft] !== 0;
         const updatedDownRight = this.updateBuffer[indexDownRight] !== 0;
 
@@ -177,14 +178,6 @@ export default class FallingSandGame {
             if (canMoveDown) {
               this.outputBuffer[indexDown] = ParticleType.WATER;
               this.updateBuffer[indexDown] = 1;
-            } else if (
-              downIsPlant ||
-              leftIsPlant ||
-              rightIsPlant ||
-              upIsPlant
-            ) {
-              this.outputBuffer[indexCurrent] = ParticleType.PLANT;
-              this.updateBuffer[indexCurrent] = 1;
             } else if (canMoveDownLeft) {
               this.outputBuffer[indexDownLeft] = ParticleType.WATER;
               this.updateBuffer[indexDownLeft] = 1;
@@ -206,6 +199,26 @@ export default class FallingSandGame {
           }
 
           case ParticleType.PLANT: {
+              if (left === ParticleType.WATER) {
+                this.outputBuffer[indexLeft] = ParticleType.PLANT;
+                this.updateBuffer[indexLeft] = 1;
+              }
+
+              if (down === ParticleType.WATER) {
+                this.outputBuffer[indexDown] = ParticleType.PLANT;
+                this.updateBuffer[indexDown] = 1;
+              }
+
+              if (right === ParticleType.WATER) {
+                this.outputBuffer[indexRight] = ParticleType.PLANT;
+                this.updateBuffer[indexRight] = 1;
+              }
+
+              if (up === ParticleType.WATER) {
+                this.outputBuffer[indexUp] = ParticleType.PLANT;
+                this.updateBuffer[indexUp] = 1;
+              }
+
             this.outputBuffer[indexCurrent] = ParticleType.PLANT;
             this.updateBuffer[indexCurrent] = 1;
             break;
