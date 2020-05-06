@@ -1,8 +1,13 @@
+/* eslint-disable */
 enum ParticleType {
-  EMPTY,
+  EMPTY = 0,
   WALL,
   SAND,
-  WATER
+  WATER,
+  PLANT,
+  FIRE,
+  SALT,
+  SALT_WATER,
 }
 
 export default ParticleType;

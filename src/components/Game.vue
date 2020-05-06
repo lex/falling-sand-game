@@ -8,9 +8,12 @@
     ></canvas>
     <div>
       <p>{{ particleTypeName }}</p>
-      <Button v-on:click="onSandClicked">sand</Button>
-      <Button v-on:click="onWaterClicked">water</Button>
-      <Button v-on:click="onEmptyClicked">empty</Button>
+      <Button v-on:click="onTypeSelected(2)">sand</Button>
+      <Button v-on:click="onTypeSelected(3)">water</Button>
+      <Button v-on:click="onTypeSelected(4)">plant</Button>
+      <Button v-on:click="onTypeSelected(5)">fire</Button>
+      <Button v-on:click="onTypeSelected(6)">salt</Button>
+      <Button v-on:click="onTypeSelected(0)">empty</Button>
     </div>
     <div>
       <p>{{ brushSizeName }}</p>
@@ -20,6 +23,10 @@
     </div>
 
     <p>{{ this.fps }} fps</p>
+
+    <Button v-on:click="debugFill">
+      debug fill
+    </Button>
 
     <Button v-on:click="onPauseClicked">
       {{ paused ? "resume" : "pause" }}
@@ -41,18 +48,9 @@ import BrushSize from "@/classes/BrushSize";
 
 @Component
 export default class Game extends Vue {
-  private gameWidth = 120;
-  private gameHeight = 120;
-
-  private framebuffer = new Uint8Array(
-    this.gameHeight * this.gameWidth * 3
-  ).fill(0);
-
-  private sandGame: FallingSandGame = new FallingSandGame(
-    this.gameWidth,
-    this.gameHeight,
-    this.framebuffer
-  );
+  private sandGame: FallingSandGame = new FallingSandGame();
+  private gameWidth = this.sandGame.width;
+  private gameHeight = this.sandGame.height;
 
   private particleType: ParticleType = ParticleType.SAND;
   private brushSize = BrushSize.SMALL;
@@ -75,7 +73,7 @@ export default class Game extends Vue {
   private paused = false;
 
   private texture = PIXI.Texture.fromBuffer(
-    this.framebuffer,
+    this.sandGame.framebuffer,
     this.gameWidth,
     this.gameHeight,
     {
@@ -85,6 +83,14 @@ export default class Game extends Vue {
   );
 
   private sprite: PIXI.Sprite = PIXI.Sprite.from(this.texture);
+
+  get particleTypeName(): string {
+    return ParticleType[this.particleType];
+  }
+
+  get brushSizeName(): string {
+    return BrushSize[this.brushSize];
+  }
 
   mounted(): void {
     const canvas = this.$refs.canvas as HTMLCanvasElement;
@@ -148,7 +154,12 @@ export default class Game extends Vue {
 
   drawSand(): void {
     if (this.drawing) {
-      this.sandGame.createParticle(this.mouseX, this.mouseY, this.particleType, this.brushSize);
+      this.sandGame.createParticle(
+        this.mouseX,
+        this.mouseY,
+        this.particleType,
+        this.brushSize
+      );
     }
   }
 
@@ -173,28 +184,30 @@ export default class Game extends Vue {
     this.sandGame.tick();
   }
 
-  onSandClicked() {
-    this.particleType = ParticleType.SAND;
-  }
-
-  onWaterClicked() {
-    this.particleType = ParticleType.WATER;
-  }
-
-  onEmptyClicked() {
-    this.particleType = ParticleType.EMPTY;
-  }
-
-  get particleTypeName(): string {
-    return ParticleType[this.particleType];
-  }
-
-  get brushSizeName(): string {
-    return BrushSize[this.brushSize];
+  onTypeSelected(type: ParticleType) {
+    this.particleType = type;
   }
 
   onBrushSelected(size: BrushSize) {
     this.brushSize = size;
+  }
+
+  debugFill() {
+    for (let y = 1; y < this.gameHeight - 1; ++y) {
+      for (let x = 1; x < this.gameWidth - 1; ++x) {
+        let type = ParticleType.EMPTY;
+        const rng = ~~(Math.random() * 3);
+
+        if (rng == 0) {
+          type = ParticleType.SAND;
+        }
+
+        if (rng === 1) {
+          type = ParticleType.WATER;
+        }
+        this.sandGame.createParticle(x, y, type, BrushSize.SMALL);
+      }
+    }
   }
 }
 </script>
